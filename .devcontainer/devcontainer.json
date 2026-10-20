@@ -1,26 +1,29 @@
 {
-  "name": "RIDE Mk1 Zephyr",
+  "name": "RIDE Zephyr 4.3",
   "build": {
     "dockerfile": "Dockerfile"
   },
   "remoteUser": "ubuntu",
-  "workspaceFolder": "/workspaces/ride-mk1-fw",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "customizations": {
     "vscode": {
       "settings": {
-            "C_Cpp.intelliSenseEngine": "disabled",
-            "editor.formatOnSave": true,
-            "editor.defaultFormatter": "xaver.clang-format"
+        "C_Cpp.intelliSenseEngine": "disabled",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "clangd.arguments": [
+          "--background-index",
+          "--clang-tidy"
+        ]
       },
       "extensions": [
         "llvm-vs-code-extensions.vscode-clangd",
-        "xaver.clang-format",
-        "ms-vscode.cpptools",
         "ms-vscode.cmake-tools",
         "ms-python.python",
-        "ms-azuretools.vscode-docker",
         "eamodio.gitlens"
       ]
     }
-  }
+  },
+  "postCreateCommand": "make setup",
+  "waitFor": "updateContent"
 }
