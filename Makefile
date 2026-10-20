@@ -1,34 +1,40 @@
 APP := app
-BOARD ?= esp32c3_devkitm
-BUILD_DIR ?= build/$(BOARD)
+BOARD ?= esp32c3_devkitm/esp32c3
+BUILD_DIR ?= build/$(subst /,_,$(BOARD))
 
-.PHONY: help setup update build pristine flash clean menuconfig guiconfig
+.DEFAULT_GOAL := help
+.PHONY: help setup update doctor build pristine flash fw-package fw-download clean menuconfig guiconfig format format-check lint
 
 help:
-	@echo "R.I.D.E Mk1 Zephyr commands"
-	@echo ""
-	@echo "  make setup              Init west workspace + install deps"
-	@echo "  make update             Update Zephyr modules"
-	@echo "  make build              Build app for BOARD=$(BOARD)"
-	@echo "  make pristine           Clean rebuild"
-	@echo "  make flash              Flash app"
-	@echo "  make clean              Delete build folder"
-	@echo "  make menuconfig         Open Kconfig menu"
-	@echo ""
-	@echo "Examples:"
-	@echo "  make build"
-	@echo "  make build BOARD=esp32c3_devkitm"
-	@echo "  make flash"
+	@echo "R.I.D.E. Zephyr development commands"
+	@echo "  make setup         Fetch pinned Zephyr workspace, Python dependencies and ESP HAL blobs"
+	@echo "  make doctor        Print tool versions and verify workspace"
+	@echo "  make build         Build BOARD=$(BOARD)"
+	@echo "  make pristine      Clean rebuild"
+	@echo "  make flash         Flash BOARD=$(BOARD) (requires USB device)"
+	@echo "  make fw-package    Bundle ESP32-C3 firmware and local flashing scripts"
+	@echo "  make fw-download   Bundle and offer a private Codespaces download link"
+	@echo "  make format-check  Check tracked C source formatting"
+	@echo "  make lint          Run cppcheck on app source"
 
 setup:
-	@if [ ! -d .west ]; then west init -l $(APP); else echo ".west already exists"; fi
+	@if [ ! -d .west ]; then west init -l $(APP); else echo "Using existing .west workspace"; fi
 	west update
-	west zephyr-export
 	west packages pip --install
+	west blobs fetch hal_espressif
+	west zephyr-export
 
 update:
 	west update
 	west packages pip --install
+	west blobs fetch hal_espressif
+
+doctor:
+	@python --version
+	@west --version
+	@cmake --version | head -n 1
+	@west topdir
+	@west list zephyr -f "{revision}"
 
 build:
 	west build -b $(BOARD) $(APP) -d $(BUILD_DIR)
@@ -38,6 +44,12 @@ pristine:
 
 flash:
 	west flash -d $(BUILD_DIR)
+
+fw-package:
+	python scripts/flash/package.py --build-dir $(BUILD_DIR)
+
+fw-download: fw-package
+	python scripts/flash/download.py dist/RIDE-ESP32C3.zip
 
 clean:
 	rm -rf build
@@ -49,7 +61,10 @@ guiconfig:
 	west build -t guiconfig -d $(BUILD_DIR)
 
 format:
-	find app -name '*.[ch]' | xargs clang-format -i
+	clang-format -i $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h')
+
+format-check:
+	clang-format --dry-run --Werror $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h')
 
 lint:
-	cppcheck --enable=all --inconclusive --std=c99 app/src
+	cppcheck --error-exitcode=1 --enable=warning,style,performance --std=c99 app/src
