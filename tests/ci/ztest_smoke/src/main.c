@@ -5,7 +5,7 @@
 
 K_MSGQ_DEFINE(test_queue, sizeof(uint32_t), 2, 4);
 
-static void reset_queue(void *fixture)
+static void reset_queue(void* fixture)
 {
     ARG_UNUSED(fixture);
     k_msgq_purge(&test_queue);
