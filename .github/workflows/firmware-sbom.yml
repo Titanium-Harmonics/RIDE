@@ -2,6 +2,9 @@ name: Firmware SBOM
 
 on:
   workflow_dispatch:
+  # TEMPORARY WP-003E integration test; remove after successful verification.
+  pull_request:
+    branches: [development]
   push:
     tags:
       - 'v*'
