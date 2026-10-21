@@ -65,10 +65,10 @@ test:
 	west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister
 
 format:
-	clang-format -i $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h')
+	clang-format -i $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h' 'tests/**/*.c' 'tests/**/*.h')
 
 format-check:
-	clang-format --dry-run --Werror $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h')
+	clang-format --dry-run --Werror $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h' 'tests/**/*.c' 'tests/**/*.h')
 
 lint:
 	cppcheck --error-exitcode=1 --enable=warning,style,performance --std=c99 app/src
