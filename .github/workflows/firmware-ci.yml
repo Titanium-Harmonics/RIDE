@@ -25,14 +25,51 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build pinned Zephyr toolchain environment
-        run: docker build -f .devcontainer/Dockerfile -t ride-firmware-ci:local .devcontainer
+      # Each cache is bound to committed dependency/toolchain inputs. No secrets
+      # are exposed to the container or stored in build/test artifacts.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build cached Zephyr toolchain environment
+        uses: docker/build-push-action@v6
+        with:
+          context: .devcontainer
+          file: .devcontainer/Dockerfile
+          load: true
+          push: false
+          tags: ride-firmware-ci:local
+          cache-from: type=gha,scope=ride-zephyr-sdk
+          cache-to: type=gha,scope=ride-zephyr-sdk,mode=max,ignore-error=true
+
+      - name: Restore West module workspace
+        uses: actions/cache@v4
+        with:
+          path: |
+            .west
+            zephyr
+            modules
+            bootloader
+            tools
+          key: ${{ runner.os }}-west-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}
+
+      - name: Restore compiler cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/ccache
+          key: ${{ runner.os }}-ccache-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}-
 
       - name: Build and verify firmware
         run: |
+          mkdir -p .cache/ccache
           docker run --rm \
             --user 0:0 \
             --env HOME=/tmp \
+            --env CCACHE_DIR=/workspaces/RIDE/.cache/ccache \
+            --env CCACHE_BASEDIR=/workspaces/RIDE \
+            --env CCACHE_COMPILERCHECK=content \
+            --env CCACHE_MAXSIZE=1G \
             --volume "$PWD:/workspaces/RIDE" \
             --workdir /workspaces/RIDE \
             ride-firmware-ci:local \
@@ -42,8 +79,10 @@ jobs:
               make doctor
               make format-check
               make lint
-              make test
-              make build'
+              ccache --zero-stats
+              west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister --enable-ccache
+              west build -b esp32c3_devkitm/esp32c3 app -d build/esp32c3_devkitm_esp32c3 -- -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+              ccache --show-stats'
 
       - name: Upload Twister reports and logs
         if: always()
