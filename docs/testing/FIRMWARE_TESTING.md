@@ -35,3 +35,9 @@ Create a new subdirectory under `tests/ci/` with `CMakeLists.txt`, `prj.conf`, `
 - If tests fail, inspect `build/twister/` and the printed Twister summary before changing assertions.
 
 WP-003C will establish GitHub Actions verification and provide first observed CI results. No CI or on-target execution is claimed in this increment.
+
+## PlantUML diagram validation (WP-003D)
+
+Place version-controlled PlantUML diagrams in `docs/diagrams/` using the `.puml` extension. The lightweight `PlantUML syntax validation` CI job finds `.puml` and `.plantuml` files in the project (excluding downloaded West dependencies and build outputs), downloads pinned PlantUML v1.2026.8, and runs a syntax-only check. A syntax error fails the job; generated images are not committed.
+
+The initial smoke diagram is `docs/diagrams/firmware-ci.puml`. Keep diagrams self-contained where practical. The checker is separate from the Zephyr build, so changing a diagram does not require fetching the West workspace for this check.
