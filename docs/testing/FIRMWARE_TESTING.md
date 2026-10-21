@@ -56,6 +56,8 @@ The initial smoke diagram is `docs/diagrams/firmware-ci.puml`. Keep diagrams sel
 - **Firmware CI:** ESP32-C3 build, formatter, linter and artifact upload passed in the same run; Docker, West and ccache cache restoration verified.
 - **Diagram checking:** Separate PlantUML syntax job including Graphviz passed in [run #39615638440](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39615638440).
 - **SBOM:** Four SPDX 2.3 JSON reports plus artifacts verified in [run #39617826449](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39617826449); its temporary PR trigger has been removed.
-- **Not yet demonstrated:** Intentional failing Ztest and malformed PlantUML negative tests; physical ESP32-C3 test execution; manual SBOM dispatch after merge.
+- **Negative Ztest:** Deliberately wrong assertion produced a failing Twister case and failed firmware CI in [run #39619704363](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39619704363); the original assertion was restored.
+- **Negative PlantUML:** A deliberately missing `!include` caused the PlantUML validation job to fail with exit code 200 in [run #39620742467](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39620742467); the original diagram was restored.
+- **Not yet demonstrated:** Physical ESP32-C3 test execution and manual SBOM dispatch after merge.
 
-Do not describe unperformed negative tests or hardware testing as accepted. They need separate evidence when executed.
+Negative tests above are intentionally failing historical runs, not current defects. Physical hardware testing and post-merge manual SBOM dispatch remain separate future checks.
