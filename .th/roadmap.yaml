@@ -1,0 +1,211 @@
+schema_version: 1
+project: ride-mk1
+roadmap:
+- id: WP-001
+  type: waypoint
+  title: Development Environment & Flashing
+  status: completed
+  description: Reproducible development, build, packaging, and flashing.
+- id: WP-002
+  type: waypoint
+  title: Titanium Harmonics Website Integration
+  status: completed
+  depends_on:
+  - WP-001
+  description: Publish metadata, banner and website synchronization.
+- id: WP-003
+  type: waypoint
+  title: Firmware Testing & CI Infrastructure
+  status: in_progress
+  depends_on:
+  - WP-001
+  description: Automated Zephyr tests, CI and conventions for isolated POCs.
+- id: WP-004
+  type: waypoint
+  title: Firmware Architecture, State Machine & Task Framework
+  status: planned
+  depends_on:
+  - WP-003
+  description: Extendable global and subsystem states, event/task architecture, diagrams and tests.
+- id: WP-005
+  type: waypoint
+  title: POC — Google Maps Navigation Extraction
+  status: planned
+  depends_on:
+  - WP-004
+  description: Test Google Maps maneuver extraction with locked Android; capture reusable navigation events and
+    feasibility evidence in poc/wp-005-navigation.
+- id: WP-006
+  type: waypoint
+  title: POC — Concurrent Multi-Camera BLE Control
+  status: planned
+  depends_on:
+  - WP-005
+  description: Test simultaneous mixed-brand three-camera BLE controls; retain traces and scenarios in poc/wp-006-multicamera-ble.
+- id: WP-007
+  type: waypoint
+  title: POC — MCU Selection & BLE Benchmarking
+  status: planned
+  depends_on:
+  - WP-006
+  description: Benchmark candidate MCUs with four BLE links, navigation replay and camera scenarios; document selection
+    in poc/wp-007-mcu-benchmark.
+- id: WP-008
+  type: waypoint
+  title: Secure FOTA Infrastructure
+  status: planned
+  depends_on:
+  - WP-007
+  description: Signed FOTA, bootloader layout, verification and interrupted-update recovery.
+- id: WP-009
+  type: waypoint
+  title: Hardware Architecture, PCB & Prototype
+  status: planned
+  depends_on:
+  - WP-007
+  - WP-008
+  description: PCB, electronics, peripherals, physical interfaces and initial prototype, including early power safety
+    design.
+- id: WP-010
+  type: waypoint
+  title: Power, Battery Management & Charging
+  status: planned
+  depends_on:
+  - WP-009
+  description: Battery, charging, monitoring, power modes, and safe shutdown validation.
+- id: WP-011
+  type: waypoint
+  title: Desktop GUI Simulator
+  status: planned
+  depends_on:
+  - WP-004
+  description: Desktop simulator with reusable production UI/application logic and repeatable scenarios.
+- id: WP-012
+  type: waypoint
+  title: Android Connectivity, NFC & Pairing
+  status: planned
+  depends_on:
+  - WP-007
+  description: Android BLE communication, NFC onboarding, bonding, reconnection, and session management.
+- id: WP-013
+  type: waypoint
+  title: Android Navigation Acquisition & Transfer
+  status: planned
+  depends_on:
+  - WP-005
+  - WP-012
+  description: Production acquisition and transfer of maneuver data while Android is locked.
+- id: WP-014
+  type: waypoint
+  title: Turn-by-Turn Navigation Engine
+  status: planned
+  depends_on:
+  - WP-011
+  - WP-013
+  description: Maneuver symbols, distances, status; no map rendering on device for V1.
+- id: WP-015
+  type: waypoint
+  title: Multi-Vendor Camera Protocol Integration
+  status: planned
+  depends_on:
+  - WP-006
+  description: Supported GoPro, DJI, and Insta360 camera controls with documented model limitations.
+- id: WP-016
+  type: waypoint
+  title: Concurrent Multi-Camera Recording Control
+  status: planned
+  depends_on:
+  - WP-015
+  description: Up to three mixed-camera recording sessions and phone BLE link; independent camera states.
+- id: WP-017
+  type: waypoint
+  title: Trip Telemetry & Data Logging
+  status: planned
+  depends_on:
+  - WP-010
+  description: Timestamped GPS/IMU and system telemetry with durable storage and recovery.
+- id: WP-018
+  type: waypoint
+  title: Ride Event Detection & Trip File Generation
+  status: planned
+  depends_on:
+  - WP-016
+  - WP-017
+  description: Detected events, manual marks and portable time-correlated trip files for video editing.
+- id: WP-019
+  type: waypoint
+  title: Guard Mode & Movement Detection
+  status: planned
+  depends_on:
+  - WP-010
+  description: Parked bike arming, movement detection and false alarm handling.
+- id: WP-020
+  type: waypoint
+  title: Guard Alerts & Low-Power Operation
+  status: planned
+  depends_on:
+  - WP-019
+  description: Local audible alarms, connected-phone notifications and guard energy behavior.
+- id: WP-021
+  type: waypoint
+  title: Embedded Device UI & Physical Controls
+  status: planned
+  depends_on:
+  - WP-011
+  description: Consistent motorcycle-oriented device UI and physical controls.
+- id: WP-022
+  type: waypoint
+  title: Android Companion App UX
+  status: planned
+  depends_on:
+  - WP-012
+  description: Android app for setup, navigation, cameras, FOTA, settings and trip export.
+- id: WP-023
+  type: waypoint
+  title: End-to-End System Integration
+  status: planned
+  depends_on:
+  - WP-014
+  - WP-016
+  - WP-018
+  - WP-020
+  - WP-021
+  - WP-022
+  description: Validate combined capabilities under normal loads and failures.
+- id: WP-024
+  type: waypoint
+  title: Motorcycle Validation & V1 Release
+  status: planned
+  depends_on:
+  - WP-023
+  description: Motorcycle field tests, endurance, reliability, recovery and reproducible release.
+- id: v1.0.0
+  type: milestone
+  title: First Complete R.I.D.E. Mk1 System
+  status: planned
+  description: Integrated and validated motorcycle controller and Android companion with five product pillars.
+  includes:
+  - WP-001
+  - WP-002
+  - WP-003
+  - WP-004
+  - WP-005
+  - WP-006
+  - WP-007
+  - WP-008
+  - WP-009
+  - WP-010
+  - WP-011
+  - WP-012
+  - WP-013
+  - WP-014
+  - WP-015
+  - WP-016
+  - WP-017
+  - WP-018
+  - WP-019
+  - WP-020
+  - WP-021
+  - WP-022
+  - WP-023
+  - WP-024

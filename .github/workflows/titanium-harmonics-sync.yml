@@ -1,0 +1,30 @@
+name: Sync Titanium Harmonics website
+
+on:
+  push:
+    branches: [development]
+    paths:
+      - ".th/**"
+      - "docs/assets/ride-banner.png"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify-website:
+    name: Trigger website rebuild
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Rebuild Titanium Harmonics website
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+        run: >-
+          gh api
+          --method POST
+          repos/Titanium-Harmonics/titanium-harmonics-web/dispatches
+          -f event_type=project-manifest-updated
+          -f 'client_payload[repository]=${{ github.repository }}'
+          -f 'client_payload[revision]=${{ github.sha }}'
