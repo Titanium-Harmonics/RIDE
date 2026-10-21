@@ -23,7 +23,7 @@ ZTEST(ride_ci_message_queue, test_fifo_preserves_order)
     zassert_ok(k_msgq_put(&test_queue, &second, K_NO_WAIT));
 
     zassert_ok(k_msgq_get(&test_queue, &received, K_NO_WAIT));
-    zassert_equal(received, first);
+    zassert_equal(received, 999U); /* WP-003F temporary negative test */
     zassert_ok(k_msgq_get(&test_queue, &received, K_NO_WAIT));
     zassert_equal(received, second);
 }
