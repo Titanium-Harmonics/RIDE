@@ -34,10 +34,28 @@ Create a new subdirectory under `tests/ci/` with `CMakeLists.txt`, `prj.conf`, `
 - If Twister cannot use `native_sim`, check the installed Linux host compiler and Zephyr dependencies in the development environment.
 - If tests fail, inspect `build/twister/` and the printed Twister summary before changing assertions.
 
-WP-003C will establish GitHub Actions verification and provide first observed CI results. No CI or on-target execution is claimed in this increment.
+GitHub Actions runs ESP32-C3 firmware builds, formatting and cppcheck checks, and the native_sim Ztest suite on pull requests and pushes to `development`. The firmware workflow caches its Docker toolchain, West workspace and compiler objects; `west update` still runs on every CI job. The passing cached run [#39612449953](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39612449953) demonstrated 2/2 passing host tests and 98/99 cacheable compilation hits. Hardware-in-the-loop execution remains out of scope.
 
 ## PlantUML diagram validation (WP-003D)
 
 Place version-controlled PlantUML diagrams in `docs/diagrams/` using the `.puml` extension. The lightweight `PlantUML syntax validation` CI job finds `.puml` and `.plantuml` files in the project (excluding downloaded West dependencies and build outputs), downloads pinned PlantUML v1.2026.8, and runs a syntax-only check. A syntax error fails the job; generated images are not committed.
 
 The initial smoke diagram is `docs/diagrams/firmware-ci.puml`. Keep diagrams self-contained where practical. The checker is separate from the Zephyr build, so changing a diagram does not require fetching the West workspace for this check.
+
+## Pre-commit and CI review convention (WP-003F)
+
+1. Work on a feature branch and keep its pull request in draft while checks are being developed.
+2. Validate changed YAML, shell, C, Python or PlantUML locally whenever the required tools are available. If the toolchain is unavailable, label the check **not locally executed** rather than claiming it passed.
+3. Run `make format-check`, `make lint`, `make test`, and `make build` inside the configured dev container for relevant firmware changes. Review logs, not just exit codes.
+4. Push only after local checks, then verify the GitHub Actions workflow and artifact outputs. A green compile is not an on-device test.
+5. Require explicit review and approval before merging; do not silently merge draft work.
+
+## WP-003 acceptance evidence and limits
+
+- **Host tests:** Twister `native_sim` Ztest suite; 2/2 executed cases passed in [run #39612449953](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39612449953).
+- **Firmware CI:** ESP32-C3 build, formatter, linter and artifact upload passed in the same run; Docker, West and ccache cache restoration verified.
+- **Diagram checking:** Separate PlantUML syntax job including Graphviz passed in [run #39615638440](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39615638440).
+- **SBOM:** Four SPDX 2.3 JSON reports plus artifacts verified in [run #39617826449](https://github.com/Titanium-Harmonics/RIDE/actions/runs/39617826449); its temporary PR trigger has been removed.
+- **Not yet demonstrated:** Intentional failing Ztest and malformed PlantUML negative tests; physical ESP32-C3 test execution; manual SBOM dispatch after merge.
+
+Do not describe unperformed negative tests or hardware testing as accepted. They need separate evidence when executed.
