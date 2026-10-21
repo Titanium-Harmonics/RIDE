@@ -1,0 +1,42 @@
+schema_version: 1
+
+project:
+  id: ride-mk1
+  name: "R.I.D.E. Mk1"
+  full_name: "Real-time Intelligent Detector of Events"
+
+  summary: >
+    Motorcycle-mounted connected controller project exploring multi-camera
+    recording control, turn-by-turn navigation, and ride security.
+    Currently in early firmware development.
+
+  status: active
+
+  repository:
+    provider: github
+    owner: Titanium-Harmonics
+    name: RIDE
+    url: "https://github.com/Titanium-Harmonics/RIDE"
+    default_branch: development
+
+  platforms:
+    - embedded
+    - android
+
+  categories:
+    - motorcycle
+    - navigation
+    - camera
+    - hardware
+
+  technologies:
+    - zephyr
+    - ble
+    - esp32
+    - android
+
+  links:
+    source: "https://github.com/Titanium-Harmonics/RIDE"
+
+  branding:
+    banner: "docs/assets/ride-banner.png"
