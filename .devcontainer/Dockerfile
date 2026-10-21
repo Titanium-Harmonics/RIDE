@@ -6,7 +6,7 @@ ARG WEST_VERSION=1.5.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash-completion ca-certificates ccache clang clangd clang-format cmake cppcheck \
-    curl device-tree-compiler dfu-util file g++ gcc git gperf jq less \
+    curl device-tree-compiler dfu-util file g++ g++-multilib gcc gcc-multilib git gperf jq less \
     libncurses-dev libusb-1.0-0 make nano ninja-build pkg-config \
     python3 python3-dev python3-pip python3-venv python3-setuptools python3-wheel \
     rsync sudo unzip usbutils udev wget xz-utils \
