@@ -75,6 +75,8 @@ jobs:
             ride-firmware-ci:local \
             bash -c 'set -euo pipefail
               git config --global --add safe.directory /workspaces/RIDE
+              # Bootstrap manifest import before asking West to enumerate projects.
+              git config --global --add safe.directory /workspaces/RIDE/zephyr
               # Trust only the cached West Git checkouts, never safe.directory=*.
               # Use the manifest-resolved project list, including imported modules.
               while IFS= read -r project_path; do
