@@ -15,6 +15,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  plantuml:
+    name: PlantUML syntax validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download pinned PlantUML
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            --output "${RUNNER_TEMP}/plantuml.jar" \
+            https://github.com/plantuml/plantuml/releases/download/v1.2026.8/plantuml.jar
+          java -jar "${RUNNER_TEMP}/plantuml.jar" -version
+
+      - name: Validate all PlantUML diagrams
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' diagrams < <(find . -type f \( -name '*.puml' -o -name '*.plantuml' \) \
+            -not -path './.git/*' -not -path './build/*' -not -path './zephyr/*' \
+            -not -path './modules/*' -not -path './bootloader/*' -not -path './tools/*' \
+            -print0)
+          if (( ${#diagrams[@]} == 0 )); then
+            echo "No PlantUML diagrams found; skipping syntax validation."
+            exit 0
+          fi
+          printf 'Validating %s PlantUML diagram(s)\n' "${#diagrams[@]}"
+          java -jar "${RUNNER_TEMP}/plantuml.jar" -checkonly -failfast2 "${diagrams[@]}"
+
   firmware:
     name: ESP32-C3 build and host tests
     runs-on: ubuntu-24.04
