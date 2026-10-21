@@ -1,0 +1,16 @@
+@startuml
+title R.I.D.E. firmware CI validation
+start
+:Restore Docker, West and compiler caches;
+:Resolve pinned West manifest;
+:Run formatting and static analysis;
+:Execute native_sim Ztest suites;
+if (Host tests pass?) then (yes)
+  :Build ESP32-C3 firmware;
+  :Upload test reports and firmware;
+else (no)
+  :Fail CI;
+  stop
+endif
+stop
+@enduml

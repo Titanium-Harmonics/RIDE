@@ -1,0 +1,167 @@
+name: Firmware CI
+
+on:
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plantuml:
+    name: PlantUML syntax validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Graphviz for PlantUML diagrams
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends graphviz
+          dot -V
+
+      - name: Download pinned PlantUML
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            --output "${RUNNER_TEMP}/plantuml.jar" \
+            https://github.com/plantuml/plantuml/releases/download/v1.2026.8/plantuml.jar
+          java -jar "${RUNNER_TEMP}/plantuml.jar" -version
+
+      - name: Validate all PlantUML diagrams
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' diagrams < <(find . -type f \( -name '*.puml' -o -name '*.plantuml' \) \
+            -not -path './.git/*' -not -path './build/*' -not -path './zephyr/*' \
+            -not -path './modules/*' -not -path './bootloader/*' -not -path './tools/*' \
+            -print0)
+          if (( ${#diagrams[@]} == 0 )); then
+            echo "No PlantUML diagrams found; skipping syntax validation."
+            exit 0
+          fi
+          printf 'Validating %s PlantUML diagram(s)\n' "${#diagrams[@]}"
+          java -jar "${RUNNER_TEMP}/plantuml.jar" -checkonly -failfast2 "${diagrams[@]}"
+
+  firmware:
+    name: ESP32-C3 build and host tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Each cache is bound to committed dependency/toolchain inputs. No secrets
+      # are exposed to the container or stored in build/test artifacts.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build cached Zephyr toolchain environment
+        uses: docker/build-push-action@v6
+        with:
+          context: .devcontainer
+          file: .devcontainer/Dockerfile
+          load: true
+          push: false
+          tags: ride-firmware-ci:local
+          cache-from: type=gha,scope=ride-zephyr-sdk
+          cache-to: type=gha,scope=ride-zephyr-sdk,mode=max,ignore-error=true
+
+      - name: Restore West module workspace
+        uses: actions/cache@v4
+        with:
+          path: |
+            .west
+            zephyr
+            modules
+            bootloader
+            tools
+          key: ${{ runner.os }}-west-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}
+
+      - name: Restore compiler cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/ccache
+          key: ${{ runner.os }}-ccache-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}-
+
+      - name: Build and verify firmware
+        run: |
+          mkdir -p .cache/ccache
+          docker run --rm \
+            --user 0:0 \
+            --env HOME=/tmp \
+            --env CCACHE_DIR=/workspaces/RIDE/.cache/ccache \
+            --env CCACHE_BASEDIR=/workspaces/RIDE \
+            --env CCACHE_COMPILERCHECK=content \
+            --env CCACHE_MAXSIZE=1G \
+            --volume "$PWD:/workspaces/RIDE" \
+            --workdir /workspaces/RIDE \
+            ride-firmware-ci:local \
+            bash -c 'set -euo pipefail
+              git config --global --add safe.directory /workspaces/RIDE
+              # Bootstrap manifest import before asking West to enumerate projects.
+              git config --global --add safe.directory /workspaces/RIDE/zephyr
+              # Trust only the cached West Git checkouts, never safe.directory=*.
+              # Use the manifest-resolved project list, including imported modules.
+              while IFS= read -r project_path; do
+                [ -z "$project_path" ] && continue
+                case "$project_path" in
+                  /*|*../*|../*|*/..) echo "Unsafe West project path: $project_path" >&2; exit 1 ;;
+                esac
+                git config --global --add safe.directory "/workspaces/RIDE/$project_path"
+              done < <(west list -f "{path}" | sort -u)
+              make setup
+              make doctor
+              make format-check
+              make lint
+              ccache --zero-stats
+              west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister --enable-ccache
+              west build -b esp32c3_devkitm/esp32c3 app -d build/esp32c3_devkitm_esp32c3 -- -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+              ccache --show-stats'
+
+      - name: Upload Twister reports and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ride-twister-${{ github.run_id }}
+          path: |
+            build/twister/twister.json
+            build/twister/twister.xml
+            build/twister/twister_report.xml
+            build/twister/**/build.log
+            build/twister/**/handler.log
+            build/twister/**/twister.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload ESP32-C3 firmware
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ride-esp32c3-${{ github.sha }}
+          path: |
+            build/esp32c3_devkitm_esp32c3/zephyr/zephyr.elf
+            build/esp32c3_devkitm_esp32c3/zephyr/zephyr.bin
+            build/esp32c3_devkitm_esp32c3/zephyr/.config
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,111 @@
+name: Firmware SBOM
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-sbom-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sbom:
+    name: Generate ESP32-C3 SPDX SBOM
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build cached Zephyr toolchain environment
+        uses: docker/build-push-action@v6
+        with:
+          context: .devcontainer
+          file: .devcontainer/Dockerfile
+          load: true
+          push: false
+          tags: ride-firmware-ci:local
+          cache-from: type=gha,scope=ride-zephyr-sdk
+          cache-to: type=gha,scope=ride-zephyr-sdk,mode=max,ignore-error=true
+
+      - name: Restore West module workspace
+        uses: actions/cache@v4
+        with:
+          path: |
+            .west
+            zephyr
+            modules
+            bootloader
+            tools
+          key: ${{ runner.os }}-west-v1-${{ hashFiles('app/west.yml', '.devcontainer/Dockerfile') }}
+
+      - name: Generate SPDX 2.3 tag-value and JSON reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --user 0:0 \
+            --env HOME=/tmp \
+            --volume "$PWD:/workspaces/RIDE" \
+            --workdir /workspaces/RIDE \
+            ride-firmware-ci:local \
+            bash -c 'set -euo pipefail
+              git config --global --add safe.directory /workspaces/RIDE
+              git config --global --add safe.directory /workspaces/RIDE/zephyr
+              while IFS= read -r project_path; do
+                [ -z "$project_path" ] && continue
+                case "$project_path" in
+                  /*|*../*|../*|*/..) echo "Unsafe West project path: $project_path" >&2; exit 1 ;;
+                esac
+                git config --global --add safe.directory "/workspaces/RIDE/$project_path"
+              done < <(west list -f "{path}" | sort -u)
+              make setup
+              sbom_build=build/sbom-esp32c3
+              west spdx --init -d "$sbom_build"
+              west build -b esp32c3_devkitm/esp32c3 app -d "$sbom_build" -- -DCONFIG_BUILD_OUTPUT_META=y
+              west spdx -d "$sbom_build" --spdx-version 2.3
+              python -m pip install --disable-pip-version-check "spdx-tools==0.8.3"
+              shopt -s nullglob
+              reports=("$sbom_build"/spdx/*.spdx)
+              if (( ${#reports[@]} == 0 )); then
+                echo "No SPDX documents produced" >&2
+                exit 1
+              fi
+              for report in "${reports[@]}"; do
+                pyspdxtools -i "$report" -o "${report}.json"
+              done
+              python - "$sbom_build/spdx" <<'PY'
+          import json
+          import pathlib
+          import sys
+          directory = pathlib.Path(sys.argv[1])
+          for name in ("app", "zephyr", "build", "modules-deps"):
+              tag = directory / (name + ".spdx")
+              output = directory / (name + ".spdx.json")
+              if not tag.is_file() or not output.is_file():
+                  raise SystemExit("Missing required SPDX document: " + name)
+              document = json.loads(output.read_text(encoding="utf-8"))
+              if document.get("spdxVersion") != "SPDX-2.3":
+                  raise SystemExit("Unexpected SPDX format in " + str(output))
+              print("Verified", output)
+          PY
+          '
+
+      - name: Upload SPDX SBOM artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ride-esp32c3-spdx-${{ github.sha }}
+          path: build/sbom-esp32c3/spdx/*
+          if-no-files-found: error
+          retention-days: 30
