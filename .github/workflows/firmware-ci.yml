@@ -31,12 +31,13 @@ jobs:
       - name: Build and verify firmware
         run: |
           docker run --rm \
-            --user "$(id -u):$(id -g)" \
+            --user 0:0 \
             --env HOME=/tmp \
             --volume "$PWD:/workspaces/RIDE" \
             --workdir /workspaces/RIDE \
             ride-firmware-ci:local \
             bash -c 'set -euo pipefail
+              git config --global --add safe.directory /workspaces/RIDE
               make setup
               make doctor
               make format-check
