@@ -1,0 +1,72 @@
+name: Firmware CI
+
+on:
+  pull_request:
+    branches: [development]
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  firmware:
+    name: ESP32-C3 build and host tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build pinned Zephyr toolchain environment
+        run: docker build -f .devcontainer/Dockerfile -t ride-firmware-ci:local .devcontainer
+
+      - name: Build and verify firmware
+        run: |
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/tmp \
+            --volume "$PWD:/workspaces/RIDE" \
+            --workdir /workspaces/RIDE \
+            ride-firmware-ci:local \
+            bash -c 'set -euo pipefail
+              make setup
+              make doctor
+              make format-check
+              make lint
+              make test
+              make build'
+
+      - name: Upload Twister reports and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ride-twister-${{ github.run_id }}
+          path: |
+            build/twister/twister.json
+            build/twister/twister.xml
+            build/twister/twister_report.xml
+            build/twister/**/build.log
+            build/twister/**/handler.log
+            build/twister/**/twister.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload ESP32-C3 firmware
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ride-esp32c3-${{ github.sha }}
+          path: |
+            build/esp32c3_devkitm_esp32c3/zephyr/zephyr.elf
+            build/esp32c3_devkitm_esp32c3/zephyr/zephyr.bin
+            build/esp32c3_devkitm_esp32c3/zephyr/.config
+          if-no-files-found: error
+          retention-days: 14
