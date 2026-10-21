@@ -75,6 +75,15 @@ jobs:
             ride-firmware-ci:local \
             bash -c 'set -euo pipefail
               git config --global --add safe.directory /workspaces/RIDE
+              # Trust only the cached West Git checkouts, never safe.directory=*.
+              # Use the manifest-resolved project list, including imported modules.
+              while IFS= read -r project_path; do
+                [ -z "$project_path" ] && continue
+                case "$project_path" in
+                  /*|*../*|../*|*/..) echo "Unsafe West project path: $project_path" >&2; exit 1 ;;
+                esac
+                git config --global --add safe.directory "/workspaces/RIDE/$project_path"
+              done < <(west list -f "{path}" | sort -u)
               make setup
               make doctor
               make format-check
