@@ -20,7 +20,7 @@ R.I.D.E. is being developed around five main capabilities:
 
 ## Getting Started
 
-The firmware uses **Zephyr RTOS** and currently targets the **ESP32-C3**.
+The firmware uses **Zephyr RTOS** and currently targets the **ESP32-C3 Super Mini** using the project-local `ride_esp32c3/esp32c3` Zephyr board.
 
 The recommended development environment is **GitHub Codespaces**, which provides the required tools through a preconfigured Dev Container.
 
