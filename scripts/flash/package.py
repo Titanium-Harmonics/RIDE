@@ -63,7 +63,7 @@ def main():
     git = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT,
                          capture_output=True, text=True, check=False)
     manifest = {
-        "format": 1, "board": "esp32c3_devkitm/esp32c3", "chip": "esp32c3",
+        "format": 1, "board": "ride_esp32c3/esp32c3", "chip": "esp32c3",
         "git_revision": git.stdout.strip() if git.returncode == 0 else "unknown",
         "esptool_version": "4.9.0",
         "image": {"filename": "zephyr.bin", "sha256": sha,
