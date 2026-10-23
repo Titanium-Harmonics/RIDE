@@ -3,7 +3,7 @@ BOARD ?= esp32c3_devkitm/esp32c3
 BUILD_DIR ?= build/$(subst /,_,$(BOARD))
 
 .DEFAULT_GOAL := help
-.PHONY: help setup update doctor build pristine flash fw-package fw-download clean menuconfig guiconfig format format-check lint test
+.PHONY: help setup update doctor build pristine flash fw-package fw-download clean menuconfig guiconfig format format-check lint test test-report
 
 help:
 	@echo "R.I.D.E. Zephyr development commands"
@@ -14,7 +14,8 @@ help:
 	@echo "  make flash         Flash BOARD=$(BOARD) (requires USB device)"
 	@echo "  make fw-package    Bundle ESP32-C3 firmware and local flashing scripts"
 	@echo "  make fw-download   Bundle and offer a private Codespaces download link"
-	@echo "  make test          Run host-based Ztest suites with Twister (native_sim)"
+	@echo "  make test          Run native sanitizer tests and Twister (native_sim)"
+	@echo "  make test-report   Run tests and generate build/reports/index.html"
 	@echo "  make format-check  Check tracked C source formatting"
 	@echo "  make lint          Run cppcheck on app source"
 
@@ -62,7 +63,13 @@ guiconfig:
 	west build -t guiconfig -d $(BUILD_DIR)
 
 test:
+	sh tests/button_engine/run.sh
 	west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister
+
+test-report:
+	@$(MAKE) test; status=$$?; \
+	python scripts/testing/html_report.py --xml build/twister/twister_report.xml --output build/reports/index.html || exit $$?; \
+	exit $$status
 
 format:
 	clang-format -i $(shell git ls-files 'app/*.c' 'app/*.h' 'app/**/*.c' 'app/**/*.h' 'tests/**/*.c' 'tests/**/*.h')

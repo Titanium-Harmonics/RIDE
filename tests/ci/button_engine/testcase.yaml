@@ -1,0 +1,7 @@
+tests:
+  ride.button_engine:
+    platform_allow:
+      - native_sim
+    tags:
+      - ride
+      - button
