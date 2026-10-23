@@ -64,6 +64,7 @@ guiconfig:
 
 test:
 	sh tests/button_engine/run.sh
+	sh tests/terminal/run.sh
 	west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister
 
 test-report:
