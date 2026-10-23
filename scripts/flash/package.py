@@ -50,7 +50,7 @@ def main():
         p.error("Missing CMakeCache.txt: run make pristine first")
     cache = (build / "CMakeCache.txt").read_text(errors="replace")
     if not re.search(r"(?m)^BOARD(?:_TARGET)?:[^=]*=esp32c3_devkitm\b", cache):
-        p.error("This packager currently supports only esp32c3_devkitm")
+        p.error("This packager currently supports only ride_esp32c3")
     runner = build / "zephyr" / "runners.yaml"
     binary = build / "zephyr" / "zephyr.bin"
     if not runner.is_file() or not binary.is_file() or not binary.stat().st_size:
