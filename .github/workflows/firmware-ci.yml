@@ -3,6 +3,7 @@ name: Firmware CI
 on:
   pull_request:
     branches: [development]
+    types: [opened, reopened, synchronize, ready_for_review]
   push:
     branches: [development]
   workflow_dispatch:
@@ -16,6 +17,7 @@ concurrency:
 
 jobs:
   plantuml:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: PlantUML syntax validation
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -60,6 +62,7 @@ jobs:
           java -jar "${RUNNER_TEMP}/plantuml.jar" -checkonly -failfast2 "${diagrams[@]}"
 
   firmware:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: ESP32-C3 build and host tests
     runs-on: ubuntu-24.04
     timeout-minutes: 60
