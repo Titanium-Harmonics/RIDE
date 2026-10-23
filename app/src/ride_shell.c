@@ -3,6 +3,10 @@
 #include "ride_command_dispatcher.h"
 
 #include <zephyr/kernel.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/printk.h>
+
+#include <errno.h>
 #include <zephyr/shell/shell.h>
 
 static ride_button_engine_t button_engine;
@@ -105,7 +109,7 @@ static int cmd_button(const struct shell* sh, size_t argc, char** argv)
     ARG_UNUSED(argc);
     char line[64];
     int length = snprintk(line, sizeof(line), "button %s %s", argv[1], argv[2]);
-    if (length < 0 || length >= sizeof(line))
+    if (length < 0 || (size_t)length >= sizeof(line))
     {
         shell_error(sh, "Command too long");
         return -EINVAL;
