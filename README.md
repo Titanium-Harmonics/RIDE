@@ -55,7 +55,9 @@ Flash the ESP32-C3 using the included script:
 
 **Linux:**
 ```bash
-bash flash.sh --port /dev/ttyUSB0
+bash flash.sh --port /dev/ttyACM0
+# or: chmod +x flash.sh && ./flash.sh --port /dev/ttyACM0
+# USB-to-UART adapter: use /dev/ttyUSB0 instead
 ```
 
 **Windows PowerShell:**
