@@ -1,7 +1,6 @@
 APP := app
-BOARD ?= esp32c3_devkitm/esp32c3
+BOARD ?= ride_esp32c3/esp32c3
 BUILD_DIR ?= build/$(subst /,_,$(BOARD))
-OVERLAY_FILE ?= boards/esp32c3_devkitm.overlay
 
 .DEFAULT_GOAL := help
 .PHONY: help setup update doctor build pristine flash fw-package fw-download clean menuconfig guiconfig format format-check lint test test-report
@@ -40,7 +39,7 @@ doctor:
 	@west list zephyr -f "{revision}"
 
 build:
-	west build -b $(BOARD) $(APP) -d $(BUILD_DIR) -- -DDTC_OVERLAY_FILE=$(OVERLAY_FILE)
+	west build -b $(BOARD) $(APP) -d $(BUILD_DIR)
 
 pristine:
 	west build -p always -b $(BOARD) $(APP) -d $(BUILD_DIR) -- -DDTC_OVERLAY_FILE=$(OVERLAY_FILE)
