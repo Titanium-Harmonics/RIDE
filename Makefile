@@ -42,7 +42,7 @@ build:
 	west build -b $(BOARD) $(APP) -d $(BUILD_DIR)
 
 pristine:
-	west build -p always -b $(BOARD) $(APP) -d $(BUILD_DIR) -- -DDTC_OVERLAY_FILE=$(OVERLAY_FILE)
+	west build -p always -b $(BOARD) $(APP) -d $(BUILD_DIR)
 
 flash:
 	west flash -d $(BUILD_DIR)
