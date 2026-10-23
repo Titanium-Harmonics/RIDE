@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-static void expect_simple(const char *input, ride_terminal_command_type_t type)
+static void expect_simple(const char* input, ride_terminal_command_type_t type)
 {
     ride_terminal_command_t command;
 
@@ -11,7 +11,7 @@ static void expect_simple(const char *input, ride_terminal_command_type_t type)
     assert(command.type == type);
 }
 
-static void expect_invalid(const char *input)
+static void expect_invalid(const char* input)
 {
     ride_terminal_command_t command;
 
@@ -27,15 +27,6 @@ int main(void)
     expect_simple(" status ", RIDE_TERMINAL_STATUS);
     expect_simple("buttons status", RIDE_TERMINAL_BUTTONS_STATUS);
 
-    assert(ride_terminal_parse("button back long", &command));
-    assert(command.type == RIDE_TERMINAL_BUTTON);
-    assert(command.button == RIDE_BTN_BACK);
-    assert(command.action == RIDE_TERMINAL_LONG);
-
-    assert(ride_terminal_parse("button rec short", &command));
-    assert(command.button == RIDE_BTN_REC);
-    assert(command.action == RIDE_TERMINAL_SHORT);
-
     assert(ride_terminal_parse("button left press", &command));
     assert(command.button == RIDE_BTN_LEFT);
     assert(command.action == RIDE_TERMINAL_PRESS);
@@ -48,6 +39,8 @@ int main(void)
     expect_invalid("button left");
     expect_invalid("button unknown short");
     expect_invalid("button rec hold");
+    expect_invalid("button rec short");
+    expect_invalid("button back long");
     expect_invalid("help extra");
     expect_invalid("button rec short extra");
     expect_invalid("BUTTON REC SHORT");

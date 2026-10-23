@@ -28,6 +28,6 @@ typedef struct
 } ride_terminal_command_t;
 
 /* Parses one command without allocating memory or modifying the input. */
-bool ride_terminal_parse(const char *line, ride_terminal_command_t *output);
+bool ride_terminal_parse(const char* line, ride_terminal_command_t* output);
 
 #endif

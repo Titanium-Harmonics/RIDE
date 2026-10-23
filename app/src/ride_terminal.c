@@ -7,16 +7,14 @@
 #define RIDE_TERMINAL_MAX_LINE 96U
 #define RIDE_TERMINAL_MAX_TOKENS 4U
 
-static bool token_equals(const char *token, const char *name)
+static bool token_equals(const char* token, const char* name)
 {
     return strcmp(token, name) == 0;
 }
 
-static bool parse_button(const char *token, ride_button_t *button)
+static bool parse_button(const char* token, ride_button_t* button)
 {
-    static const char *const names[] = {
-        "rec", "left", "right", "enter", "back", "action"
-    };
+    static const char* const names[] = {"rec", "left", "right", "enter", "back", "action"};
 
     for (unsigned int i = 0U; i < RIDE_BTN_COUNT; ++i)
     {
@@ -30,13 +28,11 @@ static bool parse_button(const char *token, ride_button_t *button)
     return false;
 }
 
-static bool parse_action(const char *token, ride_terminal_button_action_t *action)
+static bool parse_action(const char* token, ride_terminal_button_action_t* action)
 {
-    static const char *const names[] = {
-        "press", "release", "short", "long"
-    };
+    static const char* const names[] = {"press", "release"};
 
-    for (unsigned int i = 0U; i < 4U; ++i)
+    for (unsigned int i = 0U; i < 2U; ++i)
     {
         if (token_equals(token, names[i]))
         {
@@ -48,13 +44,13 @@ static bool parse_action(const char *token, ride_terminal_button_action_t *actio
     return false;
 }
 
-bool ride_terminal_parse(const char *line, ride_terminal_command_t *output)
+bool ride_terminal_parse(const char* line, ride_terminal_command_t* output)
 {
     char buffer[RIDE_TERMINAL_MAX_LINE];
-    char *tokens[RIDE_TERMINAL_MAX_TOKENS] = {NULL};
+    char* tokens[RIDE_TERMINAL_MAX_TOKENS] = {NULL};
     size_t length;
     unsigned int count = 0U;
-    char *cursor;
+    char* cursor;
 
     if (output == NULL)
     {
@@ -115,14 +111,12 @@ bool ride_terminal_parse(const char *line, ride_terminal_command_t *output)
     {
         output->type = RIDE_TERMINAL_STATUS;
     }
-    else if (count == 2U && token_equals(tokens[0], "buttons") &&
-             token_equals(tokens[1], "status"))
+    else if (count == 2U && token_equals(tokens[0], "buttons") && token_equals(tokens[1], "status"))
     {
         output->type = RIDE_TERMINAL_BUTTONS_STATUS;
     }
     else if (count == 3U && token_equals(tokens[0], "button") &&
-             parse_button(tokens[1], &output->button) &&
-             parse_action(tokens[2], &output->action))
+             parse_button(tokens[1], &output->button) && parse_action(tokens[2], &output->action))
     {
         output->type = RIDE_TERMINAL_BUTTON;
     }

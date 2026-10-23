@@ -63,13 +63,12 @@ guiconfig:
 	west build -t guiconfig -d $(BUILD_DIR)
 
 test:
-	sh tests/button_engine/run.sh
-	sh tests/terminal/run.sh
+	python scripts/testing/run_host_tests.py
 	west twister -T tests/ci -p native_sim --inline-logs --outdir build/twister
 
 test-report:
-	@$(MAKE) test; status=$$?; \
-	python scripts/testing/html_report.py --xml build/twister/twister_report.xml --output build/reports/index.html || exit $$?; \
+	@$(MAKE) test; status=$?; \
+	python scripts/testing/html_report.py --xml build/twister/twister_report.xml --host-xml build/tests/host_report.xml --output build/reports/index.html || exit $$?; \
 	exit $$status
 
 format:
