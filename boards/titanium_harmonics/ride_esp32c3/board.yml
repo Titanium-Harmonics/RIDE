@@ -1,0 +1,6 @@
+board:
+  name: ride_esp32c3
+  full_name: R.I.D.E. ESP32-C3 Super Mini Prototype
+  vendor: titanium_harmonics
+  socs:
+    - name: esp32c3
