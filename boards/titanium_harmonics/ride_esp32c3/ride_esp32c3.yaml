@@ -1,0 +1,11 @@
+identifier: ride_esp32c3/esp32c3
+name: R.I.D.E. ESP32-C3 Super Mini Prototype
+type: mcu
+arch: riscv
+toolchain:
+  - zephyr
+supported:
+  - gpio
+  - uart
+  - entropy
+vendor: titanium_harmonics
