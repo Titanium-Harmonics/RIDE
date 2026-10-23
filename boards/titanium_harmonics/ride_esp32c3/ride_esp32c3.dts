@@ -1,0 +1,38 @@
+/dts-v1/;
+
+#include <espressif/esp32c3/esp32c3_mini_n4.dtsi>
+#include <espressif/partitions_0x0_default.dtsi>
+
+/ {
+    model = "R.I.D.E. ESP32-C3 Super Mini Prototype";
+    compatible = "espressif,esp32c3";
+
+    chosen {
+        zephyr,sram = &sram1;
+        zephyr,console = &usb_serial;
+        zephyr,shell-uart = &usb_serial;
+        zephyr,flash = &flash0;
+        zephyr,code-partition = &slot0_partition;
+        zephyr,bt-hci = &esp32_bt_hci;
+    };
+};
+
+&usb_serial {
+    status = "okay";
+};
+
+&gpio0 {
+    status = "okay";
+};
+
+&trng0 {
+    status = "okay";
+};
+
+&esp32_bt_hci {
+    status = "okay";
+};
+
+&wifi {
+    status = "okay";
+};
