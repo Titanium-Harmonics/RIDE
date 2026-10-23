@@ -15,9 +15,7 @@ typedef enum
 typedef enum
 {
     RIDE_TERMINAL_PRESS,
-    RIDE_TERMINAL_RELEASE,
-    RIDE_TERMINAL_SHORT,
-    RIDE_TERMINAL_LONG
+    RIDE_TERMINAL_RELEASE
 } ride_terminal_button_action_t;
 
 typedef struct
