@@ -18,22 +18,22 @@ static const char* command_name(ride_command_t command)
 {
     switch (command)
     {
-        case RIDE_CMD_RECORD_TOGGLE:
-            return "RECORD_TOGGLE";
-        case RIDE_CMD_NAV_PREVIOUS:
-            return "NAV_PREVIOUS";
-        case RIDE_CMD_NAV_NEXT:
-            return "NAV_NEXT";
-        case RIDE_CMD_NAV_SELECT:
-            return "NAV_SELECT";
-        case RIDE_CMD_NAV_BACK:
-            return "NAV_BACK";
-        case RIDE_CMD_UI_GO_HOME:
-            return "UI_GO_HOME";
-        case RIDE_CMD_EVENT_LOG:
-            return "EVENT_LOG";
-        default:
-            return "NONE";
+    case RIDE_CMD_RECORD_TOGGLE:
+        return "RECORD_TOGGLE";
+    case RIDE_CMD_NAV_PREVIOUS:
+        return "NAV_PREVIOUS";
+    case RIDE_CMD_NAV_NEXT:
+        return "NAV_NEXT";
+    case RIDE_CMD_NAV_SELECT:
+        return "NAV_SELECT";
+    case RIDE_CMD_NAV_BACK:
+        return "NAV_BACK";
+    case RIDE_CMD_UI_GO_HOME:
+        return "UI_GO_HOME";
+    case RIDE_CMD_EVENT_LOG:
+        return "EVENT_LOG";
+    default:
+        return "NONE";
     }
 }
 
@@ -60,18 +60,19 @@ static int dispatch(const struct shell* sh, ride_terminal_command_t command)
 
     switch (command.type)
     {
-        case RIDE_TERMINAL_HELP:
-            shell_print(sh, "ride help | ride status | ride buttons status | ride button <name> press|release");
-            break;
-        case RIDE_TERMINAL_STATUS:
-            shell_print(sh, "RIDE firmware running");
-            break;
-        case RIDE_TERMINAL_BUTTONS_STATUS:
-            shell_print(sh, "active=%d", (int)button_engine.active_button);
-            break;
-        default:
-            shell_print(sh, "[OK] button edge accepted");
-            break;
+    case RIDE_TERMINAL_HELP:
+        shell_print(
+            sh, "ride help | ride status | ride buttons status | ride button <name> press|release");
+        break;
+    case RIDE_TERMINAL_STATUS:
+        shell_print(sh, "RIDE firmware running");
+        break;
+    case RIDE_TERMINAL_BUTTONS_STATUS:
+        shell_print(sh, "active=%d", (int)button_engine.active_button);
+        break;
+    default:
+        shell_print(sh, "[OK] button edge accepted");
+        break;
     }
     return 0;
 }
@@ -129,17 +130,15 @@ static int cmd_button(const struct shell* sh, size_t argc, char** argv)
 
     return dispatch(sh, (ride_terminal_command_t){
                             .type = RIDE_TERMINAL_BUTTON, .button = button, .action = action});
-
 }
 
-SHELL_STATIC_SUBCMD_SET_CREATE(
-    buttons_subcommands,
-    SHELL_CMD_ARG(status, NULL, "Show effective button state", cmd_buttons_status, 1, 0),
-    SHELL_SUBCMD_SET_END);
+SHELL_STATIC_SUBCMD_SET_CREATE(buttons_subcommands,
+                               SHELL_CMD_ARG(status, NULL, "Show effective button state",
+                                             cmd_buttons_status, 1, 0),
+                               SHELL_SUBCMD_SET_END);
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
-    ride_subcommands,
-    SHELL_CMD_ARG(help, NULL, "Show RIDE commands", cmd_help, 1, 0),
+    ride_subcommands, SHELL_CMD_ARG(help, NULL, "Show RIDE commands", cmd_help, 1, 0),
     SHELL_CMD_ARG(status, NULL, "Show firmware status", cmd_status, 1, 0),
     SHELL_CMD_ARG(buttons, &buttons_subcommands, "Button state commands", NULL, 1, 0),
     SHELL_CMD_ARG(button, NULL, "Inject a button edge: <name> press|release", cmd_button, 3, 0),
