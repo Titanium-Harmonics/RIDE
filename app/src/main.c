@@ -1,13 +1,7 @@
-#include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
+#include "ride_shell.h"
 
 int main(void)
 {
-    while (1)
-    {
-        printk("RIDE Mk1 alive on ESP32-C3\n");
-        k_sleep(K_SECONDS(1));
-    }
-
+    ride_shell_init();
     return 0;
 }

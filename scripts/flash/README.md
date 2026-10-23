@@ -9,8 +9,9 @@ automatically, then reuse it.
 Linux:
 
 ```sh
-bash flash.sh --port /dev/ttyUSB0
-# or: chmod +x flash.sh && ./flash.sh --port /dev/ttyUSB0
+bash flash.sh --port /dev/ttyACM0
+# or: chmod +x flash.sh && ./flash.sh --port /dev/ttyACM0
+# USB-to-UART adapter: use /dev/ttyUSB0 instead
 ```
 
 Windows PowerShell:

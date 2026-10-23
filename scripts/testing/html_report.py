@@ -26,6 +26,11 @@ def git_value(*args):
 def generate(xml_file, output):
     root = ET.parse(xml_file).getroot()
     suites = [root] if root.tag == "testsuite" else root.findall(".//testsuite")
+    for host_file in getattr(generate, "host_files", []):
+        if host_file.is_file():
+            host_root = ET.parse(host_file).getroot()
+            suites.extend([host_root] if host_root.tag == "testsuite"
+                          else host_root.findall(".//testsuite"))
     if not suites:
         raise ValueError("No JUnit testsuites found in " + str(xml_file))
 
@@ -77,7 +82,7 @@ th{position:sticky;top:0;background:Canvas}
 pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:480px;margin:0}
 .table-wrap{overflow-x:auto}small{opacity:.75}
 </style></head><body><header><h1>R.I.D.E. Firmware Test Report</h1>
-<p>Twister / Ztest · native_sim · Revision: <code>REVISION</code> · Generated: GENERATED</p></header>
+<p>Twister / Ztest + host C tests · Revision: <code>REVISION</code> · Generated: GENERATED</p></header>
 <section class="summary">SUMMARY</section>
 <h2>Individual test cases</h2><div class="table-wrap"><table><thead><tr>
 <th>Suite</th><th>Class</th><th>Test</th><th>Result</th><th>Seconds</th><th>Failure details</th>
@@ -101,10 +106,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--xml", type=Path, default=Path("build/twister/twister_report.xml"))
     parser.add_argument("--output", type=Path, default=Path("build/reports/index.html"))
+    parser.add_argument("--host-xml", type=Path, default=None)
     args = parser.parse_args()
     if not args.xml.is_file():
         parser.error("JUnit XML not found: " + str(args.xml))
     try:
+        generate.host_files = [args.host_xml] if args.host_xml else []
         generate(args.xml, args.output)
     except (ET.ParseError, ValueError) as exc:
         parser.error(str(exc))

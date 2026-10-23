@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# Match Zephyr's ESP32-C3 DevKitM board heap reservation for HAL allocations.
+config HEAP_MEM_POOL_ADD_SIZE_BOARD
+    int
+    default 4096
