@@ -4,9 +4,9 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
-#include <zephyr/sys/printk.h>
 
 #include <errno.h>
+#include <string.h>
 #include <zephyr/shell/shell.h>
 
 static ride_button_engine_t button_engine;
@@ -46,15 +46,8 @@ static void on_button_event(ride_button_event_t event, void* context)
     }
 }
 
-static int dispatch(const struct shell* sh, const char* text)
+static int dispatch(const struct shell* sh, ride_terminal_command_t command)
 {
-    ride_terminal_command_t command;
-    if (!ride_terminal_parse(text, &command))
-    {
-        shell_error(sh, "Invalid RIDE command");
-        return -EINVAL;
-    }
-
     active_shell = sh;
     dispatcher.context = (void*)sh;
     ride_dispatch_result_t result =
@@ -87,34 +80,56 @@ static int cmd_help(const struct shell* sh, size_t argc, char** argv)
 {
     ARG_UNUSED(argc);
     ARG_UNUSED(argv);
-    return dispatch(sh, "help");
+    return dispatch(sh, (ride_terminal_command_t){.type = RIDE_TERMINAL_HELP});
 }
 
 static int cmd_status(const struct shell* sh, size_t argc, char** argv)
 {
     ARG_UNUSED(argc);
     ARG_UNUSED(argv);
-    return dispatch(sh, "status");
+    return dispatch(sh, (ride_terminal_command_t){.type = RIDE_TERMINAL_STATUS});
 }
 
 static int cmd_buttons_status(const struct shell* sh, size_t argc, char** argv)
 {
     ARG_UNUSED(argc);
     ARG_UNUSED(argv);
-    return dispatch(sh, "buttons status");
+    return dispatch(sh, (ride_terminal_command_t){.type = RIDE_TERMINAL_BUTTONS_STATUS});
 }
 
 static int cmd_button(const struct shell* sh, size_t argc, char** argv)
 {
     ARG_UNUSED(argc);
-    char line[64];
-    int length = snprintk(line, sizeof(line), "button %s %s", argv[1], argv[2]);
-    if (length < 0 || (size_t)length >= sizeof(line))
+    static const char* const names[] = {"rec", "left", "right", "enter", "back", "action"};
+    ride_button_t button = RIDE_BTN_COUNT;
+    for (size_t i = 0; i < ARRAY_SIZE(names); ++i)
     {
-        shell_error(sh, "Command too long");
+        if (strcmp(argv[1], names[i]) == 0)
+        {
+            button = (ride_button_t)i;
+            break;
+        }
+    }
+    if (button == RIDE_BTN_COUNT)
+    {
+        shell_error(sh, "Unknown button");
         return -EINVAL;
     }
-    return dispatch(sh, line);
+
+    ride_terminal_button_action_t action;
+    if (strcmp(argv[2], "press") == 0)
+        action = RIDE_TERMINAL_PRESS;
+    else if (strcmp(argv[2], "release") == 0)
+        action = RIDE_TERMINAL_RELEASE;
+    else
+    {
+        shell_error(sh, "Expected press or release");
+        return -EINVAL;
+    }
+
+    return dispatch(sh, (ride_terminal_command_t){
+                            .type = RIDE_TERMINAL_BUTTON, .button = button, .action = action});
+
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
